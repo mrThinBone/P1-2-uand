@@ -3,6 +3,9 @@ package vinhtv.android.app.popularmovies;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.GridLayoutManager;
+import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.widget.TextView;
 
 import org.json.JSONArray;
@@ -20,14 +23,18 @@ import vinhtv.android.app.popularmovies.utilities.NetworkUtils;
 
 public class MainActivity extends AppCompatActivity {
 
-    TextView dummyTextView;
+    MovieAdapter mAdapter;
     FetchWeatherTask fetchWeatherTask;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        dummyTextView = (TextView) findViewById(R.id.tv_dummy);
+        RecyclerView rclView = (RecyclerView) findViewById(R.id.rcl_movies);
+        rclView.setLayoutManager(new GridLayoutManager(this, 2));
+        mAdapter = new MovieAdapter(this, null);
+        rclView.setAdapter(mAdapter);
+
         fetchWeatherTask = new FetchWeatherTask(this);
         fetchWeatherTask.execute("popular");
     }
@@ -68,9 +75,9 @@ public class MainActivity extends AppCompatActivity {
                     return null;
                 }
             } catch (JSONException e) {
-                e.printStackTrace();
+                Log.e(e.getClass().getName(), e.getMessage(), e);
             } catch (IOException e) {
-                e.printStackTrace();
+                Log.e(e.getClass().getName(), e.getMessage(), e);
             }
             return null;
         }
@@ -80,11 +87,7 @@ public class MainActivity extends AppCompatActivity {
             super.onPostExecute(movies);
             MainActivity activity = mActivityPref.get();
             if(movies != null && activity != null) {
-                StringBuilder strBuilder = new StringBuilder();
-                for (Movie movie: movies) {
-                    strBuilder.append(movie).append("\n");
-                }
-                activity.dummyTextView.setText(strBuilder.toString());
+                activity.mAdapter.swap(movies);
             }
         }
     }

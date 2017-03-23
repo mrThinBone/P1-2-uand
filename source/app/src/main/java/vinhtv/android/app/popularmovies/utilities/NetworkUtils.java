@@ -50,18 +50,14 @@ public class NetworkUtils {
     public static String getResponseFromHttpUrl(URL url) throws IOException {
         HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
         try {
-            if(urlConnection.getResponseCode() == 200) {
-                InputStream in = urlConnection.getInputStream();
+            InputStream in = urlConnection.getInputStream();
 
-                Scanner scanner = new Scanner(in);
-                scanner.useDelimiter("\\A");
+            Scanner scanner = new Scanner(in);
+            scanner.useDelimiter("\\A");
 
-                boolean hasInput = scanner.hasNext();
-                if (hasInput) {
-                    return scanner.next();
-                } else {
-                    return null;
-                }
+            boolean hasInput = scanner.hasNext();
+            if (hasInput) {
+                return scanner.next();
             } else {
                 return null;
             }
