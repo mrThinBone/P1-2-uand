@@ -23,10 +23,15 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
 
     private Context mContext;
     private List<Movie> mMovies;
+    private ListItemClickListener mListener;
 
     public MovieAdapter(Context context, List<Movie> data) {
         mContext = context;
         this.mMovies = data;
+    }
+
+    public interface ListItemClickListener {
+        void onItemClick(Movie movie);
     }
 
     @Override
@@ -39,13 +44,17 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
     public void onBindViewHolder(MovieViewHolder holder, int position) {
         Movie movie = mMovies.get(position);
         Picasso.with(mContext.getApplicationContext()).load(
-                NetworkUtils.moviedbImageUrl(movie.getPosterPath())
+                NetworkUtils.moviedbImageUrl(movie.posterPath())
         ).fit().into(holder.ivPoster);
     }
 
     @Override
     public int getItemCount() {
         return mMovies == null ? 0 : mMovies.size();
+    }
+
+    public List<Movie> getData() {
+        return new ArrayList<>(mMovies);
     }
 
     void swap(List<Movie> data) {
@@ -58,13 +67,25 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
         notifyDataSetChanged();
     }
 
-    class MovieViewHolder extends RecyclerView.ViewHolder {
+    public void setListItemClickListener(ListItemClickListener listener) {
+        this.mListener = listener;
+    }
+
+    class MovieViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
 
         ImageView ivPoster;
 
         MovieViewHolder(View itemView) {
             super(itemView);
             ivPoster = (ImageView) itemView.findViewById(R.id.grid_item_poster);
+            itemView.setOnClickListener(this);
+        }
+
+        @Override
+        public void onClick(View view) {
+            int pos = getAdapterPosition();
+            if(mListener != null)
+                mListener.onItemClick(mMovies.get(pos));
         }
     }
 }

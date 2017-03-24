@@ -1,12 +1,15 @@
 package vinhtv.android.app.popularmovies;
 
+import android.content.Intent;
 import android.os.AsyncTask;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
-import android.widget.TextView;
+import android.view.Menu;
+import android.view.MenuItem;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -21,10 +24,12 @@ import java.util.List;
 import vinhtv.android.app.popularmovies.data.Movie;
 import vinhtv.android.app.popularmovies.utilities.NetworkUtils;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements MovieAdapter.ListItemClickListener {
 
     MovieAdapter mAdapter;
     FetchWeatherTask fetchWeatherTask;
+
+    private String mSortBy;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,8 +40,66 @@ public class MainActivity extends AppCompatActivity {
         mAdapter = new MovieAdapter(this, null);
         rclView.setAdapter(mAdapter);
 
-        fetchWeatherTask = new FetchWeatherTask(this);
-        fetchWeatherTask.execute("popular");
+        if(savedInstanceState != null) {
+            if (savedInstanceState.containsKey("m_sort_by"))
+                mSortBy = savedInstanceState.getString("m_sort_by");
+            else
+                mSortBy = getSortByFromPref();
+
+            if(savedInstanceState.containsKey("m_data")) {
+                mAdapter.swap(savedInstanceState.<Movie>getParcelableArrayList("m_data"));
+            } else {
+                fetchWeatherTask = new FetchWeatherTask(this);
+                fetchWeatherTask.execute(mSortBy);
+            }
+        }
+        mAdapter.setListItemClickListener(this);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        String sortBy = getSortByFromPref();
+        if(!sortBy.equals(mSortBy)) {
+            mSortBy = sortBy;
+            fetchWeatherTask = new FetchWeatherTask(this);
+            fetchWeatherTask.execute(mSortBy);
+        }
+    }
+
+    private String getSortByFromPref() {
+        return PreferenceManager.getDefaultSharedPreferences(getApplicationContext())
+                .getString(getString(R.string.pref_sortby_key), getString(R.string.pref_sortby_default_value));
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        outState.putString("m_sort_by", mSortBy);
+        outState.putParcelableArrayList("m_data", (ArrayList<Movie>) mAdapter.getData());
+        super.onSaveInstanceState(outState);
+    }
+
+    @Override
+    public void onItemClick(Movie movie) {
+        Intent openDetail = new Intent(this, MovieDetailActivity.class);
+        openDetail.putExtra(MovieDetailActivity.EXTRA_DATA, movie);
+        startActivity(openDetail);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        if(id == R.id.menu_setting) {
+            startActivity(new Intent(this, SettingsActivity.class));
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     @Override
