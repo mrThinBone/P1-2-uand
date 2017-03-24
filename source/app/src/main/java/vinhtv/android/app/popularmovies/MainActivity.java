@@ -10,6 +10,10 @@ import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.FrameLayout;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -29,12 +33,17 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.List
     MovieAdapter mAdapter;
     FetchWeatherTask fetchWeatherTask;
 
+    FrameLayout progressBar;
+    TextView tvNoContent;
+
     private String mSortBy;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        progressBar = (FrameLayout) findViewById(R.id.progress_bar);
+        tvNoContent = (TextView) findViewById(R.id.tv_no_content);
         RecyclerView rclView = (RecyclerView) findViewById(R.id.rcl_movies);
         rclView.setLayoutManager(new GridLayoutManager(this, 2));
         mAdapter = new MovieAdapter(this, null);
@@ -118,6 +127,12 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.List
         }
 
         @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            mActivityPref.get().progressBar.setVisibility(View.VISIBLE);
+        }
+
+        @Override
         protected List<Movie> doInBackground(String... params) {
             String sortBy = params[0];
             URL url = NetworkUtils.buildUrl(sortBy);
@@ -149,9 +164,14 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.List
         protected void onPostExecute(List<Movie> movies) {
             super.onPostExecute(movies);
             MainActivity activity = mActivityPref.get();
-            if(movies != null && activity != null) {
+            if(activity == null) return;
+            if(movies != null) {
                 activity.mAdapter.swap(movies);
+                activity.tvNoContent.setVisibility(View.INVISIBLE);
+            } else {
+                activity.tvNoContent.setVisibility(View.VISIBLE);
             }
+            activity.progressBar.setVisibility(View.INVISIBLE);
         }
     }
 }
