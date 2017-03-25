@@ -25,20 +25,28 @@ public class FetchMoviesTask extends AsyncTaskLoader<List<Movie>> {
     public static final String SEARCH_QUERY_SORTBY_EXTRA = "sortBy";
 
     private String mSortBy;
+    private Bundle mArguments;
+    private List<Movie> mCachedData;
 
     public FetchMoviesTask(Context context, Bundle args) {
         super(context);
-        this.mSortBy = args.getString(SEARCH_QUERY_SORTBY_EXTRA, "popular");
+        mArguments = args;
     }
 
     @Override
     protected void onStartLoading() {
         super.onStartLoading();
-        forceLoad();
+        String sortBy = mArguments.getString(SEARCH_QUERY_SORTBY_EXTRA);
+        if(mCachedData == null || (sortBy != null && !sortBy.equals(mSortBy))) {
+            forceLoad();
+        } else {
+            deliverResult(mCachedData);
+        }
     }
 
     @Override
     public List<Movie> loadInBackground() {
+        mSortBy = mArguments.getString(SEARCH_QUERY_SORTBY_EXTRA, "popular");
         URL url = NetworkUtils.buildUrl(mSortBy);
         try {
             String jsonResponseString = NetworkUtils.getResponseFromHttpUrl(url);
@@ -62,5 +70,11 @@ public class FetchMoviesTask extends AsyncTaskLoader<List<Movie>> {
             Log.e(e.getClass().getName(), e.getMessage(), e);
         }
         return null;
+    }
+
+    @Override
+    public void deliverResult(List<Movie> data) {
+        mCachedData = data;
+        super.deliverResult(data);
     }
 }
