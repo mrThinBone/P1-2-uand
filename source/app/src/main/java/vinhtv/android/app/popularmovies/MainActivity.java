@@ -1,41 +1,31 @@
 package vinhtv.android.app.popularmovies;
 
 import android.content.Intent;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.FrameLayout;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.IOException;
-import java.lang.ref.WeakReference;
-import java.net.URL;
-import java.util.ArrayList;
 import java.util.List;
 
 import vinhtv.android.app.popularmovies.data.Movie;
-import vinhtv.android.app.popularmovies.utilities.NetworkUtils;
+import vinhtv.android.app.popularmovies.utilities.FetchMoviesTask;
 
 public class MainActivity extends AppCompatActivity implements MovieAdapter.ListItemClickListener {
 
-    MovieAdapter mAdapter;
-    FetchWeatherTask fetchWeatherTask;
+    private static final int LOADER_FETCH_MOVIE_ID = 2003;
 
     FrameLayout progressBar;
     TextView tvNoContent;
-
+    MovieAdapter mAdapter;
     private String mSortBy;
 
     @Override
@@ -48,32 +38,42 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.List
         rclView.setLayoutManager(new GridLayoutManager(this, 2));
         mAdapter = new MovieAdapter(this, null);
         rclView.setAdapter(mAdapter);
-
-        if(savedInstanceState != null) {
-            if (savedInstanceState.containsKey("m_sort_by"))
-                mSortBy = savedInstanceState.getString("m_sort_by");
-            else
-                mSortBy = getSortByFromPref();
-
-            if(savedInstanceState.containsKey("m_data")) {
-                mAdapter.swap(savedInstanceState.<Movie>getParcelableArrayList("m_data"));
-            } else {
-                fetchWeatherTask = new FetchWeatherTask(this);
-                fetchWeatherTask.execute(mSortBy);
-            }
-        }
         mAdapter.setListItemClickListener(this);
+
+        if(savedInstanceState != null && savedInstanceState.containsKey("m_sort_by")) {
+            mSortBy = savedInstanceState.getString("m_sort_by");
+        } else {
+            mSortBy = getSortByFromPref();
+        }
+
+        LoaderManager loaderManager = getSupportLoaderManager();
+        Loader<List<Movie>> fetchMovieDataLoader = loaderManager.getLoader(LOADER_FETCH_MOVIE_ID);
+        if(fetchMovieDataLoader == null) {
+            loaderManager.initLoader(LOADER_FETCH_MOVIE_ID, createQueryBundle(mSortBy), mFetchMovieDataCallback);
+        } else {
+            loaderManager.restartLoader(LOADER_FETCH_MOVIE_ID, createQueryBundle(mSortBy), mFetchMovieDataCallback);
+        }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         String sortBy = getSortByFromPref();
-        if(!sortBy.equals(mSortBy)) {
+        if (!sortBy.equals(mSortBy)) {
             mSortBy = sortBy;
-            fetchWeatherTask = new FetchWeatherTask(this);
-            fetchWeatherTask.execute(mSortBy);
+            //*NOTE: restart loader also create a new loader if not exist
+            getSupportLoaderManager().restartLoader(LOADER_FETCH_MOVIE_ID, createQueryBundle(mSortBy), mFetchMovieDataCallback);
         }
+    }
+
+    /**
+     * a Bundle which is serve as argument for Loader
+     * perform network request to fetch movie data from TheMovieDB
+     */
+    private Bundle createQueryBundle(String sortBy) {
+        Bundle queryBundle = new Bundle();
+        queryBundle.putString(FetchMoviesTask.SEARCH_QUERY_SORTBY_EXTRA, sortBy);
+        return queryBundle;
     }
 
     private String getSortByFromPref() {
@@ -82,18 +82,34 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.List
     }
 
     @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        outState.putString("m_sort_by", mSortBy);
-        outState.putParcelableArrayList("m_data", (ArrayList<Movie>) mAdapter.getData());
-        super.onSaveInstanceState(outState);
-    }
-
-    @Override
     public void onItemClick(Movie movie) {
         Intent openDetail = new Intent(this, MovieDetailActivity.class);
         openDetail.putExtra(MovieDetailActivity.EXTRA_DATA, movie);
         startActivity(openDetail);
     }
+
+    private LoaderManager.LoaderCallbacks mFetchMovieDataCallback = new LoaderManager.LoaderCallbacks<List<Movie>>() {
+
+        @Override
+        public Loader<List<Movie>> onCreateLoader(int id, Bundle args) {
+            progressBar.setVisibility(View.VISIBLE);
+            return new FetchMoviesTask(MainActivity.this, args);
+        }
+
+        @Override
+        public void onLoadFinished(Loader<List<Movie>> loader, List<Movie> movies) {
+            if(movies != null) {
+                mAdapter.swap(movies);
+                tvNoContent.setVisibility(View.INVISIBLE);
+            } else {
+                tvNoContent.setVisibility(View.VISIBLE);
+            }
+            progressBar.setVisibility(View.INVISIBLE);
+        }
+
+        @Override
+        public void onLoaderReset(Loader<List<Movie>> loader) {}
+    };
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -112,66 +128,8 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.List
     }
 
     @Override
-    protected void onDestroy() {
-        if(fetchWeatherTask != null && !fetchWeatherTask.isCancelled())
-            fetchWeatherTask.cancel(true);
-        super.onDestroy();
-    }
-
-    static class FetchWeatherTask extends AsyncTask<String, Void, List<Movie>> {
-
-        private final WeakReference<MainActivity> mActivityPref;
-
-        public FetchWeatherTask(MainActivity activity) {
-            mActivityPref = new WeakReference<>(activity);
-        }
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-            mActivityPref.get().progressBar.setVisibility(View.VISIBLE);
-        }
-
-        @Override
-        protected List<Movie> doInBackground(String... params) {
-            String sortBy = params[0];
-            URL url = NetworkUtils.buildUrl(sortBy);
-            try {
-                String jsonResponseString = NetworkUtils.getResponseFromHttpUrl(url);
-                if(jsonResponseString == null) return null;
-
-                JSONObject jsonResponse = new JSONObject(jsonResponseString);
-                if(jsonResponse.has("results")) {
-                    List<Movie> results = new ArrayList<>();
-                    JSONArray jsonMovies = jsonResponse.getJSONArray("results");
-                    for (int i=0; i<jsonMovies.length(); i++) {
-                        JSONObject jsonMovie = jsonMovies.getJSONObject(i);
-                        results.add(new Movie(jsonMovie));
-                    }
-                    return results;
-                } else {
-                    return null;
-                }
-            } catch (JSONException e) {
-                Log.e(e.getClass().getName(), e.getMessage(), e);
-            } catch (IOException e) {
-                Log.e(e.getClass().getName(), e.getMessage(), e);
-            }
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(List<Movie> movies) {
-            super.onPostExecute(movies);
-            MainActivity activity = mActivityPref.get();
-            if(activity == null) return;
-            if(movies != null) {
-                activity.mAdapter.swap(movies);
-                activity.tvNoContent.setVisibility(View.INVISIBLE);
-            } else {
-                activity.tvNoContent.setVisibility(View.VISIBLE);
-            }
-            activity.progressBar.setVisibility(View.INVISIBLE);
-        }
+    protected void onSaveInstanceState(Bundle outState) {
+        outState.putString("m_sort_by", mSortBy);
+        super.onSaveInstanceState(outState);
     }
 }
