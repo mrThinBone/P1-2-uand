@@ -1,6 +1,7 @@
 package vinhtv.android.app.popularmovies.utilities;
 
 import android.content.Context;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v4.content.AsyncTaskLoader;
 import android.util.Log;
@@ -15,6 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import vinhtv.android.app.popularmovies.data.Movie;
+import vinhtv.android.app.popularmovies.data.MovieContract;
 
 /**
  * Created by DELL-INSPIRON on 3/25/2017.
@@ -40,28 +42,36 @@ public class FetchMoviesTask extends AsyncTaskLoader<List<Movie>> {
     @Override
     public List<Movie> loadInBackground() {
         String sortBy = mArguments.getString(SEARCH_QUERY_SORTBY_EXTRA, "popular");
-        URL url = NetworkUtils.buildUrl(sortBy);
-        try {
-            String jsonResponseString = NetworkUtils.getResponseFromHttpUrl(url);
-            if(jsonResponseString == null) return null;
+        List<Movie> result = new ArrayList<>();
+        if(sortBy.equals("favorite")) {
+            // get favorite movies from local db
+            Cursor cursor = getContext().getContentResolver().query(MovieContract.FavoriteMovieEntry.CONTENT_URI,
+                    null, null, null,
+                    MovieContract.FavoriteMovieEntry.COLUMN_ADDED_TIME + " DESC");
 
-            JSONObject jsonResponse = new JSONObject(jsonResponseString);
-            if(jsonResponse.has("results")) {
-                List<Movie> results = new ArrayList<>();
-                JSONArray jsonMovies = jsonResponse.getJSONArray("results");
-                for (int i=0; i<jsonMovies.length(); i++) {
-                    JSONObject jsonMovie = jsonMovies.getJSONObject(i);
-                    results.add(new Movie(jsonMovie));
+            if(cursor != null) result.addAll(Utilities.moviesCursorToList(cursor));
+        } else {
+            // get movies from TheMovieDB api
+            URL url = NetworkUtils.buildUrl(sortBy);
+            try {
+                String jsonResponseString = NetworkUtils.getResponseFromHttpUrl(url);
+                if (jsonResponseString == null) return null;
+
+                JSONObject jsonResponse = new JSONObject(jsonResponseString);
+                if (jsonResponse.has("results")) {
+                    JSONArray jsonMovies = jsonResponse.getJSONArray("results");
+                    for (int i = 0; i < jsonMovies.length(); i++) {
+                        JSONObject jsonMovie = jsonMovies.getJSONObject(i);
+                        result.add(new Movie(jsonMovie));
+                    }
+                    return result;
                 }
-                return results;
-            } else {
-                return null;
+            } catch (JSONException e) {
+                Log.e(e.getClass().getName(), e.getMessage(), e);
+            } catch (IOException e) {
+                Log.e(e.getClass().getName(), e.getMessage(), e);
             }
-        } catch (JSONException e) {
-            Log.e(e.getClass().getName(), e.getMessage(), e);
-        } catch (IOException e) {
-            Log.e(e.getClass().getName(), e.getMessage(), e);
         }
-        return null;
+        return result;
     }
 }

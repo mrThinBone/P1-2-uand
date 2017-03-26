@@ -48,6 +48,7 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
         tvMovieDuration = (TextView) findViewById(R.id.detail_movie_duration);
         btnAddFavorite = (Button) findViewById(R.id.btn_add_favorite);
 
+        btnAddFavorite.setOnClickListener(this);
         Movie movie = getIntent().getParcelableExtra(EXTRA_DATA);
         tvMovieTitle.setText(movie.title());
         tvMovieReleaseDate.setText(movie.releaseDate());

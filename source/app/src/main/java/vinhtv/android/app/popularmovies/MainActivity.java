@@ -92,7 +92,7 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.List
 
         @Override
         public void onLoadFinished(Loader<List<Movie>> loader, List<Movie> movies) {
-            if(movies != null) {
+            if(movies.size() > 0) {
                 mAdapter.swap(movies);
                 tvNoContent.setVisibility(View.INVISIBLE);
             } else {

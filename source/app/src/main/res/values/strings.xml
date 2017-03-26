@@ -17,11 +17,13 @@
     <string-array name="pref_list_sortby_entries">
         <item>Most Popular</item>
         <item>Top Rated</item>
+        <item>Favorite</item>
     </string-array>
 
     <string-array name="pref_list_sortby_entry_values">
         <item>popular</item>
         <item>top_rated</item>
+        <item>favorite</item>
     </string-array>
 
     <string name="pref_sortby_default_value">popular</string>
