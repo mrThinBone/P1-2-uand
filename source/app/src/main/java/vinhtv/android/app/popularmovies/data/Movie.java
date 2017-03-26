@@ -19,6 +19,16 @@ public class Movie implements Parcelable {
     private final String releaseDate;
     private final String overview;
 
+    public Movie(long id, String posterPath, String title, double rating, String releaseDate, String overview) {
+        this.id = id;
+        this.posterPath = posterPath;
+        this.title = title;
+        this.rating = rating;
+        this.releaseDate = releaseDate;
+        this.overview = overview;
+        this.backdropPath = "";
+    }
+
     public Movie(JSONObject jsonMovie) throws JSONException {
         id = jsonMovie.getLong("id");
         posterPath = jsonMovie.getString("poster_path");

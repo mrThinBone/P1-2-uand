@@ -33,6 +33,10 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="vinhtv.android.app.popularmovies.MainActivity" />
         </activity>
+        <provider
+            android:authorities="vinhtv.android.app.popularmovies"
+            android:name=".data.MovieProvider"
+            android:exported="false"/>
     </application>
 
 </manifest>
