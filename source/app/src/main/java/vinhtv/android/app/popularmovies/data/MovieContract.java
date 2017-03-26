@@ -27,7 +27,7 @@ public final class MovieContract {
     public static final Uri BASE_CONTENT_URI = Uri.parse("content://" + CONTENT_AUTHORITY);
     public static final String PATH_FAVORITE_MOVIES = "favMovies";
 
-    static class FavoriteMovieEntry implements BaseColumns {
+    public static class FavoriteMovieEntry implements BaseColumns {
         public static final Uri CONTENT_URI = BASE_CONTENT_URI.buildUpon().appendPath(PATH_FAVORITE_MOVIES).build();
 
         public static final String TABLE_NAME = "favMovie";

@@ -63,12 +63,22 @@ public class MovieProvider extends ContentProvider {
                         null,
                         null,
                         sortOrder);
+                retCursor.setNotificationUri(getContext().getContentResolver(), uri);
+                break;
+            case FAVORITE_MOVIE_WITH_ID:
+                String id = uri.getLastPathSegment();
+                selection = MovieContract.FavoriteMovieEntry._ID + " = ?";
+                selectionArgs = new String[] {id};
+                retCursor = db.query(MovieContract.FavoriteMovieEntry.TABLE_NAME,
+                        projection,
+                        selection,
+                        selectionArgs,
+                        null, null, null);
                 break;
             default:
                 throw new UnsupportedOperationException("Unknown uri: " + uri);
         }
         // notify cursor if there're any changes on given Uri
-        retCursor.setNotificationUri(getContext().getContentResolver(), uri);
         return retCursor;
     }
 

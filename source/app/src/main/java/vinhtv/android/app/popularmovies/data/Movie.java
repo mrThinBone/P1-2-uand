@@ -47,6 +47,10 @@ public class Movie implements Parcelable {
         return backdropPath;
     }
 
+    public long id() {
+        return id;
+    }
+
     public String title() {
         return title;
     }
