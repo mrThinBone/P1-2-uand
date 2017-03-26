@@ -1,6 +1,7 @@
 package vinhtv.android.app.popularmovies.data;
 
 import android.content.ContentProvider;
+import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.UriMatcher;
 import android.database.Cursor;
@@ -47,19 +48,69 @@ public class MovieProvider extends ContentProvider {
 
     @Nullable
     @Override
-    public Cursor query(@NonNull Uri uri, @Nullable String[] strings, @Nullable String s, @Nullable String[] strings1, @Nullable String s1) {
-        return null;
+    public Cursor query(@NonNull Uri uri, @Nullable String[] projection, @Nullable String selection,
+                        @Nullable String[] selectionArgs, @Nullable String sortOrder) {
+        SQLiteDatabase db =getReadableDatabase();
+        int match = sUriMatcher.match(uri);
+
+        Cursor retCursor;
+        switch (match) {
+            case FAVORITE_MOVIES:
+                retCursor = db.query(MovieContract.FavoriteMovieEntry.TABLE_NAME,
+                        projection,
+                        selection,
+                        selectionArgs,
+                        null,
+                        null,
+                        sortOrder);
+                break;
+            default:
+                throw new UnsupportedOperationException("Unknown uri: " + uri);
+        }
+        // notify cursor if there're any changes on given Uri
+        retCursor.setNotificationUri(getContext().getContentResolver(), uri);
+        return retCursor;
     }
 
     @Nullable
     @Override
     public Uri insert(@NonNull Uri uri, @Nullable ContentValues contentValues) {
-        return null;
+        SQLiteDatabase db = getWritableDatabase();
+        int match = sUriMatcher.match(uri);
+
+        Uri returnUri = null;
+        switch (match) {
+            case FAVORITE_MOVIES:
+                long id = db.insert(MovieContract.FavoriteMovieEntry.TABLE_NAME, null, contentValues);
+                if(id > 0) {
+                    returnUri = ContentUris.withAppendedId(MovieContract.FavoriteMovieEntry.CONTENT_URI, id);
+                }
+                break;
+            default:
+                throw new UnsupportedOperationException("Unknown uri: " + uri);
+        }
+        getContext().getContentResolver().notifyChange(uri, null);
+        return returnUri;
     }
 
     @Override
     public int delete(@NonNull Uri uri, @Nullable String whereClause, @Nullable String[] whereArgs) {
-        return 0;
+        SQLiteDatabase db = getWritableDatabase();
+        int match = sUriMatcher.match(uri);
+
+        int deletedRows;
+        switch (match) {
+            case FAVORITE_MOVIE_WITH_ID:
+                String id = uri.getLastPathSegment();
+                whereClause = MovieContract.FavoriteMovieEntry._ID + " = ?";
+                whereArgs = new String[] {id};
+                deletedRows = db.delete(MovieContract.FavoriteMovieEntry.TABLE_NAME, whereClause, whereArgs);
+                break;
+            default:
+                throw new UnsupportedOperationException("Unknown uri: " + uri);
+        }
+        getContext().getContentResolver().notifyChange(MovieContract.FavoriteMovieEntry.CONTENT_URI, null);
+        return deletedRows;
     }
 
     @Override

@@ -13,12 +13,12 @@ import vinhtv.android.app.popularmovies.data.Movie;
 
 public class Utilities {
 
-    private static final int COL_MOVIE_ID = 1;
-    private static final int COL_MOVIE_POSTER = 2;
-    private static final int COL_MOVIE_TITLE = 3;
-    private static final int COL_MOVIE_RELEASE_DATE = 4;
-    private static final int COL_MOVIE_OVERVIEW = 5;
-    private static final int COL_MOVIE_RATING = 6;
+    private static final int COL_MOVIE_ID = 0;
+    private static final int COL_MOVIE_POSTER = 1;
+    private static final int COL_MOVIE_TITLE = 2;
+    private static final int COL_MOVIE_RELEASE_DATE = 3;
+    private static final int COL_MOVIE_OVERVIEW = 4;
+    private static final int COL_MOVIE_RATING = 5;
 
     public static List<Movie> moviesCursorToList(Cursor cursor) {
         List<Movie> result = new ArrayList<>();
