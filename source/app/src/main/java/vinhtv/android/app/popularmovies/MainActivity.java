@@ -46,13 +46,7 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.List
             mSortBy = getSortByFromPref();
         }
 
-        LoaderManager loaderManager = getSupportLoaderManager();
-        Loader<List<Movie>> fetchMovieDataLoader = loaderManager.getLoader(LOADER_FETCH_MOVIE_ID);
-        if(fetchMovieDataLoader == null) {
-            loaderManager.initLoader(LOADER_FETCH_MOVIE_ID, createQueryBundle(mSortBy), mFetchMovieDataCallback);
-        } else {
-            loaderManager.restartLoader(LOADER_FETCH_MOVIE_ID, createQueryBundle(mSortBy), mFetchMovieDataCallback);
-        }
+        getSupportLoaderManager().initLoader(LOADER_FETCH_MOVIE_ID, createQueryBundle(mSortBy), mFetchMovieDataCallback);
     }
 
     @Override
