@@ -15,6 +15,10 @@ import com.squareup.picasso.Picasso;
 import vinhtv.android.app.popularmovies.data.Movie;
 import vinhtv.android.app.popularmovies.utilities.AddFavoriteTask;
 import vinhtv.android.app.popularmovies.utilities.AddFavoriteTask.TaskResult;
+import vinhtv.android.app.popularmovies.utilities.FetchMovieStuffTask;
+import vinhtv.android.app.popularmovies.utilities.FetchMovieStuffTask.MovieStuff;
+import vinhtv.android.app.popularmovies.utilities.FetchMovieStuffTask.Video;
+import vinhtv.android.app.popularmovies.utilities.FetchMovieStuffTask.Review;
 import vinhtv.android.app.popularmovies.utilities.NetworkUtils;
 
 import static vinhtv.android.app.popularmovies.R.id.detail_movie_releaseDate;
@@ -22,7 +26,8 @@ import static vinhtv.android.app.popularmovies.R.id.detail_movie_releaseDate;
 public class MovieDetailActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<TaskResult>,
         View.OnClickListener {
 
-    private static final int LOADER_ID = 1001;
+    private static final int ADD_REMOVE_FAVORITE_LOADER_ID = 1001;
+    private static final int MOVIE_STUFF_LOADER_ID = 1002;
     static final String EXTRA_DATA = "ext_data";
 
     TextView tvMovieTitle;
@@ -59,13 +64,17 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
                 NetworkUtils.moviedbImageUrl(movie.posterPath())
         ).fit().into(ivMoviePoster);
         mMovie = movie;
+
+        Bundle args = new Bundle();
+        args.putString("movie_id", String.valueOf(movie.id()));
+        getSupportLoaderManager().initLoader(MOVIE_STUFF_LOADER_ID, args, movieStuffLoaderCallbacks);
     }
 
     @Override
     public void onClick(View view) {
         Bundle args = new Bundle();
         args.putParcelable(AddFavoriteTask.ARG_DATA, mMovie);
-        getSupportLoaderManager().restartLoader(LOADER_ID, args, this);
+        getSupportLoaderManager().restartLoader(ADD_REMOVE_FAVORITE_LOADER_ID, args, this);
     }
 
     @Override
@@ -90,4 +99,20 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
 
     @Override
     public void onLoaderReset(Loader<AddFavoriteTask.TaskResult> loader) {}
+
+    private LoaderManager.LoaderCallbacks<MovieStuff> movieStuffLoaderCallbacks = new LoaderManager.LoaderCallbacks<MovieStuff>() {
+        @Override
+        public Loader<MovieStuff> onCreateLoader(int id, Bundle args) {
+            String movieId = args.getString("movie_id");
+            return new FetchMovieStuffTask(MovieDetailActivity.this, movieId);
+        }
+
+        @Override
+        public void onLoadFinished(Loader<MovieStuff> loader, MovieStuff data) {
+            data.toString();
+        }
+
+        @Override
+        public void onLoaderReset(Loader<MovieStuff> loader) {}
+    };
 }

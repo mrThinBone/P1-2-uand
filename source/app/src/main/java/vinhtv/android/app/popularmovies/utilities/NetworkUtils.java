@@ -27,6 +27,28 @@ public class NetworkUtils {
     }
 
     /**
+     * url to get videos or reviews of given movie ID
+     * @param id movie id
+     * @param segment either /videos or /reviews
+     * @return url
+     */
+    public static URL buildUrl(String id, String segment) {
+        Uri builtUri = Uri.parse(THEMOVIEDB_URL).buildUpon()
+                .appendEncodedPath("movie/" + id + "/" + segment)
+                .appendQueryParameter("api_key", BuildConfig.THEMOVIEDB_API_KEY)
+                .build();
+
+        URL url = null;
+        try {
+            url = new URL(builtUri.toString());
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
+        Log.v(TAG, "Built URI " + url);
+        return url;
+    }
+
+    /**
      * an URL to fetch movie data from themoviedb
      * @param sortBy either popular or top_rated
      * @return
