@@ -17,12 +17,11 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
-                android:layout_marginLeft="30dp"
-                android:layout_marginStart="30dp"
+                style="@style/common_layout_detail_style"
                 android:textColor="@color/colorWhiteText"
                 android:textSize="45sp" />
         </FrameLayout>
-        <LinearLayout
+        <LinearLayout android:baselineAligned="false"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
@@ -62,7 +61,7 @@
                 <Button android:id="@+id/btn_add_favorite"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:background="@color/colorAccentLight"
+                    android:background="@color/colorLightAccent"
                     android:text="@string/button_fav_text"
                     android:textColor="@color/colorSecondaryText"
                     android:paddingLeft="20dp"
@@ -78,10 +77,46 @@
             android:layout_height="wrap_content"
             android:textColor="@color/colorPrimaryText"
             android:layout_marginTop="20dp"
-            android:layout_marginLeft="20dp"
-            android:layout_marginStart="25dp"
-            android:layout_marginRight="10dp"
-            android:layout_marginEnd="10dp"
+            style="@style/common_layout_detail_style"
             android:textAppearance="@android:style/TextAppearance.DeviceDefault.Small"/>
+
+        <LinearLayout android:id="@+id/ll_movie_videos"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            style="@style/common_layout_detail_style"
+            android:visibility="visible">
+            <View xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/colorPrimary"
+                android:layout_marginTop="10dp"/>
+            <TextView android:layout_marginTop="10dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/tv_label_trailers"
+                android:textColor="@color/colorPrimaryDark"
+                android:textAppearance="@android:style/TextAppearance.DeviceDefault.Medium"/>
+        </LinearLayout>
+        <LinearLayout android:id="@+id/ll_movie_reviews"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginTop="10dp"
+            style="@style/common_layout_detail_style"
+            android:visibility="gone">
+            <View xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/colorPrimary"
+                android:layout_marginTop="10dp"/>
+            <TextView android:layout_marginTop="10dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/tv_label_reviews"
+                android:textColor="@color/colorPrimaryDark"
+                android:layout_marginBottom="5dp"
+                android:textAppearance="@android:style/TextAppearance.DeviceDefault.Medium"/>
+        </LinearLayout>
     </LinearLayout>
 </ScrollView>

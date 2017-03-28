@@ -5,6 +5,8 @@
     <string name="no_content_msg">Sorry, no content available.\nPlease check network connection and try again.</string>
     <string name="add_favorite_msg_success">This movie has been %1$s from your favorite collection.</string>
     <string name="add_favorite_msg_failed">Failed to perform this action.</string>
+    <string name="tv_label_trailers">Trailers:</string>
+    <string name="tv_label_reviews">Reviews:</string>
 
     <string name="button_fav_text">MARK AS\nFAVORITE</string>
     <!-- Strings related to Settings -->
